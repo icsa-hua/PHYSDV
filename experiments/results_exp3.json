@@ -1,0 +1,616 @@
+{
+  "config": {
+    "frames": 1000,
+    "hz": 10,
+    "ema_alpha": 0.3,
+    "dwell_k": 5
+  },
+  "scenarios": {
+    "urban_dense": {
+      "tick_ms_p50": 27.7,
+      "tick_ms_p95": 31.1,
+      "oracle_agreement_pct": 78.5,
+      "policies": {
+        "always_B": {
+          "share": {
+            "A": 0.0,
+            "B": 100.0,
+            "C": 0.0,
+            "D": 0.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 0.0,
+          "mean_map": 37.3,
+          "mean_true_total_ms": 5.0,
+          "wan_share_pct": 0.0
+        },
+        "always_C": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 100.0,
+            "D": 0.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 53.5,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 120.5,
+          "wan_share_pct": 0.0
+        },
+        "always_D": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 0.0,
+            "D": 100.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 100.0,
+          "mean_map": 52.9,
+          "mean_true_total_ms": 63.6,
+          "wan_share_pct": 100.0
+        },
+        "proposed_raw": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 55.1,
+            "D": 44.9
+          },
+          "switches_per_1k": 375,
+          "lat_ok_pct": 96.6,
+          "acc_ok_pct": 100.0,
+          "mean_map": 51.4,
+          "mean_true_total_ms": 68.6,
+          "wan_share_pct": 44.9
+        },
+        "proposed_ema": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 45.4,
+            "D": 54.6
+          },
+          "switches_per_1k": 89,
+          "lat_ok_pct": 93.3,
+          "acc_ok_pct": 100.0,
+          "mean_map": 51.7,
+          "mean_true_total_ms": 69.2,
+          "wan_share_pct": 54.6
+        },
+        "proposed_ema_dwell": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 44.1,
+            "D": 55.9
+          },
+          "switches_per_1k": 11,
+          "lat_ok_pct": 90.0,
+          "acc_ok_pct": 100.0,
+          "mean_map": 51.7,
+          "mean_true_total_ms": 72.8,
+          "wan_share_pct": 55.9
+        },
+        "oracle": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 53.5,
+            "D": 46.5
+          },
+          "switches_per_1k": 375,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 100.0,
+          "mean_map": 51.5,
+          "mean_true_total_ms": 67.7,
+          "wan_share_pct": 46.5
+        }
+      }
+    },
+    "urban_sparse": {
+      "tick_ms_p50": 27.9,
+      "tick_ms_p95": 31.5,
+      "oracle_agreement_pct": 88.3,
+      "policies": {
+        "always_B": {
+          "share": {
+            "A": 0.0,
+            "B": 100.0,
+            "C": 0.0,
+            "D": 0.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 0.0,
+          "mean_map": 37.3,
+          "mean_true_total_ms": 5.0,
+          "wan_share_pct": 0.0
+        },
+        "always_C": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 100.0,
+            "D": 0.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 82.9,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 68.3,
+          "wan_share_pct": 0.0
+        },
+        "always_D": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 0.0,
+            "D": 100.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 100.0,
+          "mean_map": 52.9,
+          "mean_true_total_ms": 68.7,
+          "wan_share_pct": 100.0
+        },
+        "proposed_raw": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 79.9,
+            "D": 20.1
+          },
+          "switches_per_1k": 260,
+          "lat_ok_pct": 99.1,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.7,
+          "mean_true_total_ms": 55.2,
+          "wan_share_pct": 20.1
+        },
+        "proposed_ema": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 82.7,
+            "D": 17.3
+          },
+          "switches_per_1k": 118,
+          "lat_ok_pct": 94.3,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.7,
+          "mean_true_total_ms": 59.2,
+          "wan_share_pct": 17.3
+        },
+        "proposed_ema_dwell": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 82.4,
+            "D": 17.6
+          },
+          "switches_per_1k": 10,
+          "lat_ok_pct": 90.3,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.7,
+          "mean_true_total_ms": 63.7,
+          "wan_share_pct": 17.6
+        },
+        "oracle": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 82.8,
+            "D": 17.2
+          },
+          "switches_per_1k": 224,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.7,
+          "mean_true_total_ms": 55.6,
+          "wan_share_pct": 17.2
+        }
+      }
+    },
+    "suburban": {
+      "tick_ms_p50": 28.0,
+      "tick_ms_p95": 32.0,
+      "oracle_agreement_pct": 98.6,
+      "policies": {
+        "always_B": {
+          "share": {
+            "A": 0.0,
+            "B": 100.0,
+            "C": 0.0,
+            "D": 0.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 0.0,
+          "mean_map": 37.3,
+          "mean_true_total_ms": 5.0,
+          "wan_share_pct": 0.0
+        },
+        "always_C": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 100.0,
+            "D": 0.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 98.5,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 48.2,
+          "wan_share_pct": 0.0
+        },
+        "always_D": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 0.0,
+            "D": 100.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 100.0,
+          "mean_map": 52.9,
+          "mean_true_total_ms": 73.8,
+          "wan_share_pct": 100.0
+        },
+        "proposed_raw": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 97.7,
+            "D": 2.3
+          },
+          "switches_per_1k": 46,
+          "lat_ok_pct": 99.4,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.3,
+          "mean_true_total_ms": 47.4,
+          "wan_share_pct": 2.3
+        },
+        "proposed_ema": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 99.7,
+            "D": 0.3
+          },
+          "switches_per_1k": 6,
+          "lat_ok_pct": 98.6,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 48.0,
+          "wan_share_pct": 0.3
+        },
+        "proposed_ema_dwell": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 100.0,
+            "D": 0.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 98.5,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 48.2,
+          "wan_share_pct": 0.0
+        },
+        "oracle": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 98.3,
+            "D": 1.7
+          },
+          "switches_per_1k": 34,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 47.3,
+          "wan_share_pct": 1.7
+        }
+      }
+    },
+    "highway": {
+      "tick_ms_p50": 27.6,
+      "tick_ms_p95": 30.5,
+      "oracle_agreement_pct": 98.5,
+      "policies": {
+        "always_B": {
+          "share": {
+            "A": 0.0,
+            "B": 100.0,
+            "C": 0.0,
+            "D": 0.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 0.0,
+          "mean_map": 37.3,
+          "mean_true_total_ms": 5.0,
+          "wan_share_pct": 0.0
+        },
+        "always_C": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 100.0,
+            "D": 0.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 98.5,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 44.4,
+          "wan_share_pct": 0.0
+        },
+        "always_D": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 0.0,
+            "D": 100.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 100.0,
+          "mean_map": 52.9,
+          "mean_true_total_ms": 76.5,
+          "wan_share_pct": 100.0
+        },
+        "proposed_raw": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 99.3,
+            "D": 0.7
+          },
+          "switches_per_1k": 12,
+          "lat_ok_pct": 98.9,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 44.1,
+          "wan_share_pct": 0.7
+        },
+        "proposed_ema": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 99.8,
+            "D": 0.2
+          },
+          "switches_per_1k": 4,
+          "lat_ok_pct": 98.5,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 44.4,
+          "wan_share_pct": 0.2
+        },
+        "proposed_ema_dwell": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 100.0,
+            "D": 0.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 98.5,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 44.4,
+          "wan_share_pct": 0.0
+        },
+        "oracle": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 98.3,
+            "D": 1.7
+          },
+          "switches_per_1k": 34,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 43.7,
+          "wan_share_pct": 1.7
+        }
+      }
+    },
+    "rural": {
+      "tick_ms_p50": 28.0,
+      "tick_ms_p95": 31.3,
+      "oracle_agreement_pct": 98.8,
+      "policies": {
+        "always_B": {
+          "share": {
+            "A": 0.0,
+            "B": 100.0,
+            "C": 0.0,
+            "D": 0.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 0.0,
+          "mean_map": 37.3,
+          "mean_true_total_ms": 5.0,
+          "wan_share_pct": 0.0
+        },
+        "always_C": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 100.0,
+            "D": 0.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 98.8,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 39.2,
+          "wan_share_pct": 0.0
+        },
+        "always_D": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 0.0,
+            "D": 100.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 96.6,
+          "acc_ok_pct": 100.0,
+          "mean_map": 52.9,
+          "mean_true_total_ms": 84.9,
+          "wan_share_pct": 100.0
+        },
+        "proposed_raw": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 99.8,
+            "D": 0.2
+          },
+          "switches_per_1k": 4,
+          "lat_ok_pct": 98.9,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 39.1,
+          "wan_share_pct": 0.2
+        },
+        "proposed_ema": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 99.9,
+            "D": 0.1
+          },
+          "switches_per_1k": 2,
+          "lat_ok_pct": 98.8,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 39.2,
+          "wan_share_pct": 0.1
+        },
+        "proposed_ema_dwell": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 100.0,
+            "D": 0.0
+          },
+          "switches_per_1k": 0,
+          "lat_ok_pct": 98.8,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 39.2,
+          "wan_share_pct": 0.0
+        },
+        "oracle": {
+          "share": {
+            "A": 0.0,
+            "B": 0.0,
+            "C": 98.7,
+            "D": 1.3
+          },
+          "switches_per_1k": 26,
+          "lat_ok_pct": 100.0,
+          "acc_ok_pct": 100.0,
+          "mean_map": 50.2,
+          "mean_true_total_ms": 38.8,
+          "wan_share_pct": 1.3
+        }
+      }
+    }
+  },
+  "outage": {
+    "outage_at": 80,
+    "outage_dur": 30,
+    "frames_to_fallback": 0,
+    "recovery_frame": 110,
+    "frames_to_recover": 0,
+    "timeline_rle": [
+      [
+        "C",
+        2
+      ],
+      [
+        "D",
+        3
+      ],
+      [
+        "C",
+        1
+      ],
+      [
+        "D",
+        3
+      ],
+      [
+        "C",
+        2
+      ],
+      [
+        "D",
+        12
+      ],
+      [
+        "C",
+        9
+      ],
+      [
+        "D",
+        1
+      ],
+      [
+        "C",
+        6
+      ],
+      [
+        "D",
+        1
+      ],
+      [
+        "C",
+        4
+      ],
+      [
+        "D",
+        1
+      ],
+      [
+        "C",
+        18
+      ],
+      [
+        "D",
+        1
+      ],
+      [
+        "C",
+        15
+      ],
+      [
+        "B",
+        30
+      ],
+      [
+        "C",
+        89
+      ],
+      [
+        "D",
+        2
+      ]
+    ]
+  }
+}

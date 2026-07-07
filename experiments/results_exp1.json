@@ -1,0 +1,116 @@
+{
+  "n_rows": 50000,
+  "per_scenario": {
+    "urban_dense": {
+      "n": 14959,
+      "share_pct": 29.9,
+      "mec_avail_pct": 80.8,
+      "rssi_mean": -64.5,
+      "rssi_p5": -103.1,
+      "mec_rtt_med": 78.7,
+      "mec_rtt_p95": 319.3,
+      "cloud_rtt_med": 59.0,
+      "cloud_rtt_p95": 73.2,
+      "ho_rate_pct": 4.9,
+      "mec_beats_cloud_pct": 33.0
+    },
+    "urban_sparse": {
+      "n": 12431,
+      "share_pct": 24.9,
+      "mec_avail_pct": 83.2,
+      "rssi_mean": -64.2,
+      "rssi_p5": -103.0,
+      "mec_rtt_med": 41.7,
+      "mec_rtt_p95": 158.3,
+      "cloud_rtt_med": 64.2,
+      "cloud_rtt_p95": 81.6,
+      "ho_rate_pct": 7.0,
+      "mec_beats_cloud_pct": 70.9
+    },
+    "suburban": {
+      "n": 10086,
+      "share_pct": 20.2,
+      "mec_avail_pct": 91.4,
+      "rssi_mean": -57.8,
+      "rssi_p5": -93.9,
+      "mec_rtt_med": 39.3,
+      "mec_rtt_p95": 128.2,
+      "cloud_rtt_med": 69.7,
+      "cloud_rtt_p95": 87.2,
+      "ho_rate_pct": 10.6,
+      "mec_beats_cloud_pct": 80.9
+    },
+    "highway": {
+      "n": 7535,
+      "share_pct": 15.1,
+      "mec_avail_pct": 95.9,
+      "rssi_mean": -53.4,
+      "rssi_p5": -86.7,
+      "mec_rtt_med": 34.0,
+      "mec_rtt_p95": 110.3,
+      "cloud_rtt_med": 72.4,
+      "cloud_rtt_p95": 92.2,
+      "ho_rate_pct": 12.5,
+      "mec_beats_cloud_pct": 86.9
+    },
+    "rural": {
+      "n": 4989,
+      "share_pct": 10.0,
+      "mec_avail_pct": 98.7,
+      "rssi_mean": -50.5,
+      "rssi_p5": -85.7,
+      "mec_rtt_med": 29.3,
+      "mec_rtt_p95": 133.1,
+      "cloud_rtt_med": 81.0,
+      "cloud_rtt_p95": 103.0,
+      "ho_rate_pct": 12.2,
+      "mec_beats_cloud_pct": 88.7
+    }
+  },
+  "pathloss_recovery": {
+    "urban_dense": {
+      "configured_exp": 35,
+      "recovered_exp": 34.44,
+      "err_pct": 1.6,
+      "shadow_cfg_db": 8,
+      "resid_std_db": 8.0
+    },
+    "urban_sparse": {
+      "configured_exp": 30,
+      "recovered_exp": 29.86,
+      "err_pct": 0.5,
+      "shadow_cfg_db": 8,
+      "resid_std_db": 7.35
+    },
+    "suburban": {
+      "configured_exp": 26,
+      "recovered_exp": 26.05,
+      "err_pct": 0.2,
+      "shadow_cfg_db": 6,
+      "resid_std_db": 5.18
+    },
+    "highway": {
+      "configured_exp": 22,
+      "recovered_exp": 21.92,
+      "err_pct": 0.4,
+      "shadow_cfg_db": 4,
+      "resid_std_db": 3.35
+    },
+    "rural": {
+      "configured_exp": 20,
+      "recovered_exp": 20.02,
+      "err_pct": 0.1,
+      "shadow_cfg_db": 4,
+      "resid_std_db": 3.49
+    }
+  },
+  "global": {
+    "mec_avail_pct": 87.6,
+    "mec_rtt_med": 45.5,
+    "mec_rtt_p95": 201.7,
+    "cloud_rtt_med": 65.5,
+    "cloud_rtt_p95": 89.4,
+    "mec_load_rush": 42.6,
+    "mec_load_offpeak": 28.6
+  }
+}

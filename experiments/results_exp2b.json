@@ -1,0 +1,47 @@
+{
+  "Ridge": {
+    "mec_rtt_mae_reachable": 122.82,
+    "mec_rtt_r2_reachable": -2.6157,
+    "cloud_rtt_mae": 1.67,
+    "cloud_rtt_r2": 0.9749,
+    "fit_s": 0.0,
+    "pred_ms_p50": 1.08,
+    "size_mb": 0.0
+  },
+  "RandomForest": {
+    "mec_rtt_mae_reachable": 10.48,
+    "mec_rtt_r2_reachable": 0.9299,
+    "cloud_rtt_mae": 4.06,
+    "cloud_rtt_r2": 0.8097,
+    "fit_s": 2.9,
+    "pred_ms_p50": 14.31,
+    "size_mb": 925.81
+  },
+  "ExtraTrees": {
+    "mec_rtt_mae_reachable": 8.08,
+    "mec_rtt_r2_reachable": 0.94,
+    "cloud_rtt_mae": 4.29,
+    "cloud_rtt_r2": 0.7943,
+    "fit_s": 1.4,
+    "pred_ms_p50": 14.12,
+    "size_mb": 1464.89
+  },
+  "HistGB": {
+    "mec_rtt_mae_reachable": 6.12,
+    "mec_rtt_r2_reachable": 0.9594,
+    "cloud_rtt_mae": 1.69,
+    "cloud_rtt_r2": 0.9743,
+    "fit_s": 11.9,
+    "pred_ms_p50": 3.79,
+    "size_mb": 1.27
+  },
+  "MLP": {
+    "mec_rtt_mae_reachable": 7.06,
+    "mec_rtt_r2_reachable": 0.9524,
+    "cloud_rtt_mae": 1.8,
+    "cloud_rtt_r2": 0.9697,
+    "fit_s": 9.6,
+    "pred_ms_p50": 1.31,
+    "size_mb": 0.26
+  }
+}
