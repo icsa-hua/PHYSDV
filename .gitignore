@@ -1,3 +1,4 @@
 data/models/predictor.pkl
 __pycache__/
 *.pyc
+data/
