@@ -23,7 +23,7 @@
 
 % ─────────────────────────────────────────────────────────────────────────────
 \title{\Large PhySDV: Physics-Grounded Data Generation and Risk-Aware\\
-       Learned Offloading for QoS-Constrained Perception\\
+       Learned Task Offloading\\
        in Software-Defined Vehicles}
 
 \author{%
@@ -63,10 +63,10 @@ stabilization.  We further introduce a three-level validation protocol
 (structural, predictive, task-level): the generator's configured physics
 are recoverable from the emitted data to within 1.6\%; a gradient-boosted
 predictor attains 6.1\,ms MEC-RTT mean absolute error in a 1.3\,MB model;
-and in closed loop the learned policy matches a ground-truth oracle on up
-to 98.8\% of per-frame decisions.
+and in closed loop the learned policy tracks a ground-truth oracle to
+within QoS-neutral tier swaps (up to 98.8\% raw decision agreement).
 Quantile gating raises worst-scenario latency-budget compliance from
-94.0\% to 96.6\% at unchanged effective accuracy, while hysteresis
+94.0\% to 96.6\% at unchanged effective accuracy, while stabilization
 suppresses 96\% of mode oscillations without delaying safety fallbacks.
 Framework, dataset, and all experiments are released as open source.
 \end{abstract}
@@ -107,10 +107,8 @@ not emit supervised-learning-ready labels and are heavyweight to configure
 and run.
 
 This paper closes that gap with \textbf{PhySDV}, an open, lightweight,
-fully reproducible framework\footnote{%
-Code, dataset, trained models, and all experiment scripts:
-\url{https://github.com/icsa-hua/CLOUDNET2026-QoS-Offloading} (branch
-\texttt{new\_paper}).} that spans the complete loop from radio physics to
+fully reproducible framework\footnote{\url{https://github.com/icsa-hua/PHYSDV}}
+that spans the complete loop from radio physics to
 per-frame offloading decisions.  Our contributions are:
 
 \begin{enumerate}
@@ -280,7 +278,7 @@ contract imposes three hard budgets: $\lmax = 100$\,ms end-to-end
 latency~\cite{3gpp22186}, $\dmax = 15\%$ accuracy loss, and
 $\umax = 95\%$ utilization.  The feasible set at frame $t$ is
 \begin{align}
-\mathcal{F}_t = \bigl\{\, m :\ &\rho_m(t),\ T_m(t) \le \lmax, \nonumber\\[-1pt]
+\mathcal{F}_t = \bigl\{\, m :\ &\rho_m(t)=1,\ T_m(t) \le \lmax, \nonumber\\[-1pt]
   &\Delta_m \le \dmax,\ U_m(t) < \umax \bigr\},
 \label{eq:feasible}
 \end{align}
@@ -417,10 +415,11 @@ prediction, on which we focus.
 
 \subsection{Model-family study}
 
-Reviewer-relevant deployment constraints---model size, single-frame
+Deployment constraints---model size, single-frame
 latency, retraining cost---matter as much as accuracy on an automotive
 platform.  We compare five families under identical preprocessing and an
-80/20 split (Table~\ref{tab:predictors}).  MEC-RTT metrics are computed
+80/20 split, all implemented in scikit-learn~\cite{pedregosa2011sklearn}
+(Table~\ref{tab:predictors}).  MEC-RTT metrics are computed
 \emph{only on reachable test rows}, the operationally meaningful regime.
 A linear model fails outright on MEC RTT (R\textsuperscript{2} $<0$): the
 target is dominated by the nonlinear interaction of link budget, bandwidth
@@ -608,7 +607,7 @@ A key emergent effect deserves emphasis: in the dense-urban archetype the
 \emph{edge is not the faster tier}---MEC RTT beats cloud RTT in only 33\%
 of reachable samples, because 40 users share the cell and the
 $n = 3.5$ path loss erodes per-user throughput, while p95 MEC RTT
-(319\,ms) blows through the latency budget entirely.  Static ``edge
+(319\,ms) exceeds the latency budget outright.  Static ``edge
 always wins'' assumptions embedded in many offloading heuristics fail
 exactly where traffic is densest; per-frame prediction is not an
 optimization but a requirement.
@@ -728,8 +727,7 @@ and stabilization---runs in 10.8\,ms median per frame with the
 recommended predictor (6.2\,ms without the quantile heads; 27.9\,ms with
 the random-forest default), comfortably inside a 10\,Hz budget on CPU
 only.  Dataset generation and full training complete in under a minute
-combined; the entire evaluation reproduces from scratch on commodity
-hardware with no GPU, testbed, or network connection.
+combined, with no GPU, testbed, or network connection required.
 
 \subsection{Discussion and limitations}
 
