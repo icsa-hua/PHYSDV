@@ -22,21 +22,22 @@
 \newcommand{\umax}{U_{\max}}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\title{\Large PhySDV: Physics-Grounded Data Generation and Risk-Aware\\
-       Learned Task Offloading\\
-       in Software-Defined Vehicles}
+\title{\Large PhySDV: A Physics-Grounded Benchmark for Risk-Aware\\
+       Perception Offloading in Software-Defined Vehicles}
 
 \author{%
   \IEEEauthorblockN{%
     Konstantinos Gyftodimos,\quad
     Eirini Liotou,\quad
+    Eleni Politi,\quad
     Kyriakos Chiotis,\quad
     George Dimitrakopoulos%
   }%
   \IEEEauthorblockA{%
     Dept.\ of Informatics and Telematics,
     Harokopio University of Athens (HUA), Athens, Greece\\
-    \{kgyftodimos,\;eliotou,\;kchiotis,\;gdimitra\}@\textit{hua.gr}%
+    kgyftodimos@\textit{anadelta.hua.gr},\;
+    \{eliotou,\;politie,\;kchiotis,\;gdimitra\}@\textit{hua.gr}%
   }%
 }
 
@@ -88,10 +89,9 @@ wiring-harness decision: a perception service such as YOLOv8 object
 detection~\cite{yolov8} may run on an on-board accelerator, be offloaded
 to a road-side multi-access edge computing (MEC) server~\cite{etsi_mec},
 or be shipped to a cloud data center---and the placement can be revised
-continuously, even per camera frame.  Each tier trades accuracy against latency:
-compact on-board models respond within milliseconds but lose accuracy,
-whereas larger remote models are more accurate but pay a volatile network
-round-trip time (RTT).  Advanced driving assistance imposes hard
+per camera frame.  Each tier trades accuracy against latency: compact
+on-board models respond in milliseconds but lose accuracy; larger
+remote models pay a volatile network round-trip time (RTT).  Advanced driving assistance imposes hard
 quality-of-service (QoS) budgets---end-to-end latencies on the order of
 100\,ms~\cite{3gpp22186}---so the tier decision must be re-evaluated
 continuously as radio conditions evolve~\cite{liu2019autodriving}.
@@ -121,12 +121,6 @@ per-frame offloading decisions.  Our contributions are:
         model.  The released dataset covers 50\,000 samples across five
         road archetypes with MEC inter-site distances from 300\,m to
         10\,km (Sec.~\ref{sec:datagen}).
-  \item \textbf{A three-level validation protocol} for synthetic network
-        datasets: \emph{structural} fidelity (the configured physics must
-        be recoverable from the emitted data), \emph{predictive} fidelity
-        (held-out error), and \emph{task-level} fidelity (closed-loop
-        decision agreement against a ground-truth oracle)
-        (Sec.~\ref{sec:validation}).
   \item \textbf{A deployable two-stage network-state predictor.}
         An availability classifier gates a multi-output RTT regressor,
         avoiding sentinel-value contamination.  A model-family study
@@ -135,21 +129,40 @@ per-frame offloading decisions.  Our contributions are:
         3.8$\times$ faster than the random-forest baseline
         (Sec.~\ref{sec:predictor}).
   \item \textbf{Risk-aware QoS gating via quantile regression.}
-        Feasibility is gated on the predicted \emph{upper quantile} (p90)
-        of RTT rather than its conditional mean, converting symmetric
-        prediction error into a one-sided safety margin and closing most
-        of the latency-compliance gap to the oracle
-        (Sec.~\ref{sec:policy}, \ref{sec:results}).
+        Feasibility is gated on the predicted \emph{upper quantile}
+        (p90) of RTT rather than its mean, converting symmetric error
+        into a one-sided safety margin and closing most of the
+        compliance gap to the oracle (Secs.~\ref{sec:policy},
+        \ref{sec:results}).
   \item \textbf{A stabilized, explainable decision layer.}  Edge-first
-        feasibility selection with exponential smoothing and minimum-dwell
-        hysteresis (safety bypass for infeasibility events) suppresses
-        96\% of mode oscillations; every decision carries a
-        machine-readable reason code, supporting the auditability that SDV
-        safety cases require (Sec.~\ref{sec:policy}).
+        selection with exponential smoothing and minimum-dwell
+        hysteresis (safety bypass on infeasibility) suppresses 96\% of
+        mode oscillations; every decision carries a machine-readable
+        reason code for the auditability SDV safety cases require
+        (Sec.~\ref{sec:policy}).
+  \item \textbf{A three-level validation protocol} for synthetic
+        network datasets: \emph{structural} (configured physics
+        recoverable from the data), \emph{predictive} (held-out error),
+        and \emph{task-level} fidelity (closed-loop agreement with a
+        ground-truth oracle) (Sec.~\ref{sec:validation}).
 \end{enumerate}
 
-All results are produced by seeded, single-command scripts shipped with
-the framework.
+Fig.~\ref{fig:arch} summarizes the architecture: PhySDV is a
+\emph{framework}, not a one-off dataset.  Offline, the generator emits
+labeled samples on which the predictor stack is trained; online, the
+predictors turn the observable state $\mathbf{x}_t$ into per-tier
+estimates that a QoS-gated, stabilized policy binds to an execution
+tier at frame rate.  Every stage is replaceable: the released dataset
+is one seeded draw of the generator, alternative predictors or policies
+drop into the same loop, and the validation protocol applies unchanged.
+
+The remainder of the paper is structured as follows.
+Sec.~\ref{sec:related} reviews related work; Sec.~\ref{sec:model}
+formalizes the problem; Secs.~\ref{sec:datagen}--\ref{sec:policy}
+present the generator, predictor, and decision layer;
+Sec.~\ref{sec:validation} defines the validation protocol;
+Sec.~\ref{sec:results} reports results; Sec.~\ref{sec:conclusion}
+concludes.
 
 % ── Figure 1: architecture ───────────────────────────────────────────────────
 \begin{figure}[t]
@@ -178,27 +191,26 @@ the framework.
 \draw[arr] (mode.south) -- +(0,-7pt) -|
   node[lbl, below, pos=0.25]{10\,Hz closed loop} (state.south);
 \end{tikzpicture}
-\caption{PhySDV architecture.  Offline: the generator emits labeled data
-to train the predictors.  Online: per-frame estimates
-($\hat a$, $\hat T$, $\hat T^{(0.9)}$) feed a QoS-gated, stabilized policy
-that binds the SDV perception service to an execution tier.}
+\caption{PhySDV architecture: offline data generation and training;
+online per-frame prediction, QoS gating, and stabilized tier binding.}
 \label{fig:arch}
 \end{figure}
 
 % ── II. Related Work ─────────────────────────────────────────────────────────
 \section{Related Work}\label{sec:related}
 
-\textbf{Computation offloading.}  Offloading policy design is extensively
-surveyed in~\cite{mao2017survey,mach2017survey}.  Learning-based policies
-range from deep reinforcement learning over abstracted channel
+Computation-offloading policy design is extensively surveyed
+in~\cite{mao2017survey,mach2017survey}.  Learning-based policies
+range from deep reinforcement learning (DRL) over abstracted channel
 models~\cite{chen2019offloading} to DNN partitioning between device and
-cloud~\cite{kang2017neurosurgeon}.  These works
-optimize the \emph{policy} while abstracting the network as a stationary or
-coarsely-modeled resource; PhySDV is complementary: it supplies the missing
-substrate---a reproducible, physically-consistent environment with labeled
-network state---on which such policies can be trained and compared.
+cloud~\cite{kang2017neurosurgeon}.  These works optimize the
+\emph{policy} while abstracting the network as a stationary or coarsely
+modeled resource; PhySDV is complementary, supplying the missing
+substrate: a reproducible, physically consistent environment with
+labeled network state on which such policies can be trained and
+compared.
 
-\textbf{Vehicular edge computing.}  Edge computing is a recognized enabler
+In the vehicular domain, edge computing is a recognized enabler
 for automotive perception~\cite{liu2019autodriving}, and the SDV
 transition makes workload placement a first-class software
 concern~\cite{liu2022sdv}.  Prior evaluations typically rely on
@@ -210,7 +222,18 @@ supervised-learning labels.  PhySDV trades packet-level detail for an
 analytically transparent link/queue model that generates labeled samples
 in microseconds, is seeded end-to-end, and runs on a laptop.
 
-\textbf{Learned network models and digital twins.}  RouteNet~\cite{rusek2020routenet}
+A complementary line releases \emph{measured} vehicular network
+datasets: Raca~\emph{et~al.} publish 4G/5G throughput traces with
+channel and context metrics~\cite{raca2020}, and Lumos5G maps
+commercial mmWave-5G throughput~\cite{narayanan2020lumos}.  Such traces
+capture real radio dynamics but are fixed observational records: they
+log client-side throughput rather than the per-tier RTT, utilization,
+and reachability labels an offloading policy must predict, and cannot
+be re-parameterized.  PhySDV is generative---labels are complete and
+physics-consistent by construction---and is designed to be
+\emph{calibrated} against exactly such traces (Sec.~\ref{sec:results}).
+
+Closer to our predictive layer, RouteNet~\cite{rusek2020routenet}
 and the network digital-twin agenda~\cite{almasan2022dtn} show that
 learned surrogates predict network performance accurately---given training
 data.  We operationalize this idea for the vehicular access segment and
@@ -220,7 +243,7 @@ formulation~\cite{koenker1978} that converts the surrogate's residual
 uncertainty into a QoS safety margin.
 
 % ── III. System Model ────────────────────────────────────────────────────────
-\section{System Model and Problem Statement}\label{sec:model}
+\section{Problem Statement}\label{sec:model}
 
 \subsection{Four-tier execution hierarchy}
 
@@ -230,11 +253,10 @@ orchestrator binds each frame $t$ to exactly one execution tier
 $m \in \mathcal{M} = \{\mathrm{A}, \mathrm{B}, \mathrm{C}, \mathrm{D}\}$:
 (A)~an on-board neural processing unit and (B)~the primary on-board GPU,
 both running the compact YOLOv8n; (C)~a MEC server running YOLOv8m; and
-(D)~a cloud data center running YOLOv8l (Table~\ref{tab:modes}).  Tier
-profiles are configurable constants of the framework; shipped values use
-published COCO~\cite{lin2014coco} mean average precision (mAP) figures for
-YOLOv8~\cite{yolov8}, and a built-in benchmark module can substitute
-latencies measured on real hardware.
+(D)~a cloud data center running YOLOv8l (Table~\ref{tab:modes}).  Tier profiles are configurable constants; shipped values use published
+COCO~\cite{lin2014coco} mean average precision (mAP) figures for
+YOLOv8~\cite{yolov8}, and a benchmark module can substitute latencies
+measured on real hardware.
 
 \begin{table}[t]
 \centering
@@ -269,7 +291,7 @@ the compact model's AP drop is far from uniform (28.1\% on
 \emph{truck} vs.\ 15.7\% on \emph{person}), which a single aggregate mAP
 delta would mask.
 
-\subsection{QoS constraints and problem statement}
+\subsection{QoS constraints and decision problem}
 
 Let $T_m(t)$ denote the true end-to-end latency of tier $m$ at frame $t$
 (inference plus network RTT; zero network term for A/B), $U_m(t)$ the
@@ -283,17 +305,22 @@ $\umax = 95\%$ utilization.  The feasible set at frame $t$ is
 \label{eq:feasible}
 \end{align}
 where $\rho_m(t)$ is reachability ($\rho_C = a$, $\rho_m = 1$ otherwise).
-The system must choose $m_t$ before executing frame $t$, i.e.\ using only
+The system must choose $m_t$ before executing frame $t$, using only
 \emph{predictions} $\hat T_m(t), \hat U_m(t), \hat a(t)$ derived from the
 observable state $\mathbf{x}_t$ (Sec.~\ref{sec:datagen}); mispredictions
-that admit an infeasible tier translate directly into QoS violations.  This
-motivates both the learned predictor (Sec.~\ref{sec:predictor}) and the
+that admit an infeasible tier translate directly into QoS violations,
+motivating both the learned predictor (Sec.~\ref{sec:predictor}) and the
 risk-aware gate (Sec.~\ref{sec:policy}).
 
 % ── IV. Data generation ──────────────────────────────────────────────────────
 \section{Physics-Grounded Data Generation}\label{sec:datagen}
 
-Each sample couples a 13-dimensional observable state $\mathbf{x}$
+The generator is the root of the framework in Fig.~\ref{fig:arch}: it
+encodes the causal chain from deployment geometry and radio physics to
+the latencies a policy experiences, with three design goals:
+transparency (every constant is a named parameter), speed (a sample
+costs microseconds), and label completeness.  Concretely, each sample
+couples a 13-dimensional observable state $\mathbf{x}$
 (scenario class, vehicle speed, time of day, MEC distance, received signal
 strength, channel bandwidth, cell load, connected users, handover flag,
 payload size, wide-area-network (WAN) congestion, base cloud RTT, cloud
@@ -316,7 +343,7 @@ Received signal strength adds log-normal shadowing and stochastic NLOS
 excursions:
 \begin{equation}
 P_{\mathrm{rx}} = P_{\mathrm{tx}} + G - \mathrm{PL}(d) + X_\sigma
- - \mathbb{1}_{\mathrm{NLOS}}\,\mathcal{U}(25, 45)\ \text{dB},
+ - \mathbf{1}_{\mathrm{NLOS}}\,\mathcal{U}(25, 45)\ \text{dB},
 \label{eq:rssi}
 \end{equation}
 where $X_\sigma \sim \mathcal{N}(0, \sigma^2)$ and NLOS occurs with
@@ -328,7 +355,7 @@ scheduling, the signal-to-interference-plus-noise ratio (SINR) is
 \end{equation}
 with bandwidth $B$ (Hz), noise figure $N_F = 7$\,dB, and a fixed
 inter-cell interference margin $I_{\mathrm{ic}} = 5$\,dB.  MEC
-reachability is the link-budget test $a = \mathbb{1}[\gamma > 0\,\text{dB}]$.
+reachability is the link-budget test $a = \mathbf{1}[\gamma > 0\,\text{dB}]$.
 
 \subsection{Throughput and per-tier latency}
 
@@ -349,7 +376,7 @@ R = \eta_{\mathrm{se}} \cdot \tfrac{B}{N_{\mathrm{UE}}}
 MEC RTT composes upload, propagation, queueing, and handover terms:
 \begin{equation}
 T_{\mathrm{mec}} = \frac{8S}{R} + \frac{2d}{\nu}
- + \beta\,\rho_{\mathrm{mec}}^{2} + T_{\mathrm{ho}}\,\mathbb{1}_{\mathrm{ho}},
+ + \beta\,\rho_{\mathrm{mec}}^{2} + T_{\mathrm{ho}}\,\mathbf{1}_{\mathrm{ho}},
 \label{eq:tmec}
 \end{equation}
 with payload $S$ (kB), propagation speed $\nu = 2\times10^{8}$\,m/s, a
@@ -362,11 +389,10 @@ T_{\mathrm{cloud}} = T_{\mathrm{base}}
 \label{eq:tcloud}
 \end{equation}
 Both RTTs receive bounded multiplicative measurement noise
-($\pm10\%$ MEC, $\pm5\%$ cloud).  Handover probability rises to 0.30 near
-the cell edge at speed, cell load follows a Beta distribution scaled by a
-1.5$\times$ diurnal rush-hour factor, and user count is Poisson with
-scenario-specific mean---giving the dataset realistic temporal and spatial
-correlation structure.
+($\pm10\%$ MEC, $\pm5\%$ cloud).  Handover probability rises to 0.30
+near the cell edge at speed, cell load follows a Beta distribution with
+a 1.5$\times$ diurnal rush-hour factor, and user count is Poisson with
+scenario-specific mean---giving realistic correlation structure.
 
 \subsection{Road-scenario parameterization}
 
@@ -376,7 +402,7 @@ dense 3.5\,GHz urban micro-cell layout to a 900\,MHz rural macro cell.
 
 \begin{table}[t]
 \centering
-\caption{Road-scenario profiles}
+\caption{Road-scenario profiles (ISD = inter-site distance)}
 \label{tab:scenarios}
 \scriptsize\setlength{\tabcolsep}{3.6pt}
 \begin{tabular}{@{}lrrrrrr@{}}
@@ -399,19 +425,17 @@ rural         & 10\,000 & 60--100 & 0.9 &  10 & 2.0 &  2 \\
 
 \subsection{Two-stage formulation}
 
-Unreachable frames have no finite MEC RTT; encoding them with a sentinel
-value corrupts regression training, while discarding them biases the
-classifier.  PhySDV therefore factorizes the predictor:
+One structural obstacle shapes the predictor: unreachable frames have
+no finite MEC RTT; encoding them with a sentinel value corrupts
+regression training, while discarding them biases the classifier.  PhySDV therefore factorizes the predictor:
 a binary classifier estimates $\hat a(t)$, and a multi-output regressor
 estimates RTT and utilization; at inference time the regressor's MEC
 output is masked whenever $\hat a = 0$.  Both stages share one
-preprocessing pipeline: one-hot scenario encoding, standardization, and a
-cyclic encoding of the time of day,
-$(\sin, \cos)(2\pi h / 24)$, which removes the artificial midnight
-discontinuity.  Utilization targets are near-pass-through in the current
-generator (the serving node reports its own load in-band) and are retained
-for schema completeness; the substantive learning problem is RTT
-prediction, on which we focus.
+pipeline: one-hot scenario encoding, standardization, and cyclic
+time-of-day encoding $(\sin, \cos)(2\pi h / 24)$, removing the
+artificial midnight discontinuity.  Utilization targets are near-pass-through in the current generator and
+retained for schema completeness; the substantive learning problem is
+RTT prediction, on which we focus.
 
 \subsection{Model-family study}
 
@@ -422,17 +446,15 @@ platform.  We compare five families under identical preprocessing and an
 (Table~\ref{tab:predictors}).  MEC-RTT metrics are computed
 \emph{only on reachable test rows}, the operationally meaningful regime.
 A linear model fails outright on MEC RTT (R\textsuperscript{2} $<0$): the
-target is dominated by the nonlinear interaction of link budget, bandwidth
-share, and load.  Bagged trees (the framework's original default) model
+target is dominated by the nonlinear interaction of link budget,
+bandwidth share, and load.  Bagged trees (the original default) model
 MEC RTT well but regress the smooth WAN target poorly and serialize to
-926\,MB.  Histogram gradient boosting~\cite{friedman2001} dominates on
-both targets simultaneously---6.12\,ms MEC MAE, 1.69\,ms cloud MAE---in a
-1.3\,MB artifact with 3.8\,ms single-frame latency, and is therefore the
-recommended deployment predictor.  The availability stage is
-near-perfect for every family (gradient boosting: 100.0\% test accuracy),
-as expected: the label is a deterministic link-budget threshold
-(Sec.~\ref{sec:datagen}), and this result should be read as a consistency
-check, not a claim of difficulty.
+926\,MB.  Histogram gradient boosting~\cite{friedman2001} dominates both
+targets---6.12\,ms MEC and 1.69\,ms cloud MAE---in a 1.3\,MB artifact
+with 3.8\,ms latency, and is the recommended deployment predictor.  The availability stage is near-perfect for every
+family (gradient boosting: 100.0\%)---expected, since the label is a
+deterministic link-budget threshold (Sec.~\ref{sec:datagen})---and is a
+consistency check, not a claim of difficulty.
 
 \begin{table}[t]
 \centering
@@ -456,10 +478,10 @@ MLP (128--64)       &  7.1 & 0.952 & 1.80 & 0.970 &  1.3 & 0.3\,MB \\
 \end{tabular}
 \end{table}
 
-Impurity-based attribution on the tree ensembles confirms the physics:
-received signal strength dominates (91\% of split gain), followed by
-channel bandwidth, user count, and scenario class---mirroring the causal
-chain of \eqref{eq:pl}--\eqref{eq:tmec}.
+Impurity-based attribution confirms the physics: received signal
+strength dominates (91\% of split gain), then bandwidth, user count,
+and scenario---mirroring the causal chain of
+\eqref{eq:pl}--\eqref{eq:tmec}.
 
 \subsection{Risk-aware quantile variant}
 
@@ -470,33 +492,31 @@ latency violates $\lmax$.  We therefore train upper-quantile RTT
 regressors with pinball loss~\cite{koenker1978} at $\alpha = 0.9$
 (gradient boosting, MEC model fitted on reachable rows only); held-out
 coverage is 88.5\% (MEC) and 88.1\% (cloud) against the 90\% target.  The
-decision layer can then gate feasibility on $\hat T^{(\alpha)}_m$ instead
-of $\hat T_m$---a one-line policy change that turns residual model
-uncertainty into a one-sided safety margin.
+decision layer can then gate feasibility on $\hat T^{(\alpha)}_m$
+instead of $\hat T_m$, turning residual model uncertainty into a
+one-sided safety margin.
 
 % ── VI. Decision layer ───────────────────────────────────────────────────────
 \section{QoS-Aware Decision Layer}\label{sec:policy}
 
-Algorithm~\ref{alg:loop} summarizes the per-frame loop.  Predictions are
+The decision layer closes the online loop of Fig.~\ref{fig:arch};
+Algorithm~\ref{alg:loop} summarizes it.  Predictions are
 smoothed by an exponential moving average (EMA, $\alpha_s = 0.3$) to damp
 frame-to-frame jitter.  The feasibility gate applies
 \eqref{eq:feasible} with either the mean or the quantile RTT estimate.
-Among feasible tiers the policy is \emph{edge-first}: the MEC tier is
-preferred over cloud unless the cloud model offers more than
-$\delta = 5$ mAP points of improvement, conserving WAN bandwidth; if no
-tier is feasible (e.g.\ a connectivity outage), the loop falls back to the
-on-board GPU with an explicit reason code.  Every decision emits such a
-code (\texttt{edge\_first\_within\_map\_delta},
-\texttt{fallback\_no\_feasible\_mode}, \ldots), giving SDV integrators an
-audit trail for each frame.
+Among feasible tiers the policy is \emph{edge-first}: MEC is preferred
+over cloud unless the cloud model offers more than $\delta = 5$ mAP
+points, conserving WAN bandwidth; if no tier is feasible, the loop
+falls back to the on-board GPU.  Every decision emits a
+machine-readable reason code, giving SDV integrators a per-frame audit
+trail.
 
-Because the feasibility boundary can sit between two near-equivalent
-tiers, raw per-frame decisions oscillate.  A minimum-dwell hysteresis
-filter commits a switch only after the new tier persists for $k$
-consecutive frames ($k = 5$); infeasibility-triggered fallbacks
-\emph{bypass} the filter, so safety-critical transitions are never
-delayed.  Sec.~\ref{sec:results} quantifies the resulting
-stability--responsiveness trade-off.
+Because the feasibility boundary can sit between near-equivalent tiers,
+raw per-frame decisions oscillate.  A minimum-dwell hysteresis filter
+commits a switch only after the new tier persists for $k=5$ consecutive
+frames; infeasibility-triggered fallbacks \emph{bypass} the filter, so
+safety-critical transitions are never delayed
+(Sec.~\ref{sec:results}).
 
 \begin{algorithm}[t]
 \caption{PhySDV per-frame offloading decision}
@@ -537,15 +557,14 @@ compare recovered exponents and residual spreads to the configuration.
 (Table~\ref{tab:predictors}), with the sentinel-aware protocol of
 Sec.~\ref{sec:predictor} and quantile-coverage calibration.
 
-\textbf{V3 --- Task-level fidelity.}  Metrics V1--V2 do not establish
-that predictions are good enough \emph{for the decisions they drive}.  We
-therefore replay the closed loop against ground truth: the simulator's
-deterministic physics yield the true $T_m(t), a(t)$ per frame, an
-\emph{oracle} policy decides with these true values, and the learned
-policy is scored on (i)~decision agreement with the oracle, (ii)~true
-latency-budget compliance, and (iii)~effective detection quality.  We
-propose V3---rarely reported in offloading studies---as the primary
-acceptance criterion for learned offloading stacks.
+\textbf{V3 --- Task-level fidelity.}  V1--V2 do not establish that
+predictions are good enough \emph{for the decisions they drive}.  We
+therefore replay the closed loop against ground truth: an \emph{oracle}
+policy decides with the true $T_m(t), a(t)$, and the learned policy is
+scored on (i)~decision agreement, (ii)~true latency-budget compliance,
+and (iii)~effective detection quality.  We propose V3---rarely reported
+in offloading studies---as the primary acceptance criterion for learned
+offloading stacks.
 
 % ── VIII. Results ────────────────────────────────────────────────────────────
 \section{Experimental Results}\label{sec:results}
@@ -558,12 +577,12 @@ closed-loop runs simulate 1\,000 frames per scenario at 10\,Hz.
 
 Table~\ref{tab:physics} shows the recovered path-loss exponents within
 0.1--1.6\% of their configured values, with clipped residual spread
-tracking the configured shadowing $\sigma$.  The diurnal model is likewise
-recovered: mean cell load is 42.6\% in rush hours vs.\ 28.6\%
-off-peak---a 1.49$\times$ ratio against the configured 1.5$\times$.
-Emergent per-scenario structure (Table~\ref{tab:dataset}) is physically
-plausible: availability falls with NLOS-rich dense deployments, and MEC
-RTT worsens as user density grows.
+tracking the configured shadowing $\sigma$.  The diurnal model is
+likewise recovered: rush-hour vs.\ off-peak mean cell load is 42.6\%
+vs.\ 28.6\%, a 1.49$\times$ ratio against the configured 1.5$\times$.
+Emergent per-scenario structure (Table~\ref{tab:dataset}) is plausible:
+availability falls in NLOS-rich dense deployments, and MEC RTT worsens
+with user density.
 
 \begin{table}[t]
 \centering
@@ -603,14 +622,12 @@ rural         & 98.7\% & 29.3 / 133.1 & 81.0 / 103.0 & 88.7\% \\
 \end{tabular}
 \end{table}
 
-A key emergent effect deserves emphasis: in the dense-urban archetype the
-\emph{edge is not the faster tier}---MEC RTT beats cloud RTT in only 33\%
-of reachable samples, because 40 users share the cell and the
-$n = 3.5$ path loss erodes per-user throughput, while p95 MEC RTT
-(319\,ms) exceeds the latency budget outright.  Static ``edge
-always wins'' assumptions embedded in many offloading heuristics fail
-exactly where traffic is densest; per-frame prediction is not an
-optimization but a requirement.
+A key emergent effect deserves emphasis: in dense urban the \emph{edge
+is not the faster tier}---MEC RTT beats cloud RTT in only 33\% of
+reachable samples (40 users share the cell; $n=3.5$ path loss erodes
+per-user throughput), and p95 MEC RTT exceeds the budget outright.
+Static ``edge always wins'' heuristics fail exactly where traffic is
+densest; per-frame prediction is a requirement, not an optimization.
 
 \subsection{V2: predictive fidelity}
 
@@ -626,9 +643,9 @@ Table~\ref{tab:closedloop} compares policies over all five scenarios
 (5\,000 decisions per policy).  Static baselines expose the trade-off
 space: \emph{Always-B} meets latency trivially but violates the accuracy
 budget on every frame; \emph{Always-D} is accurate but consumes WAN
-uplink on 100\% of frames with 73.5\,ms mean latency and drops to 96.6\%
-compliance in the rural archetype; \emph{Always-C} collapses to 53.5\%
-latency compliance in dense urban (mean true latency 120.5\,ms).  The
+uplink on every frame and drops to 96.6\% compliance in the rural
+archetype; \emph{Always-C} collapses to 53.5\% latency compliance in
+dense urban.  The
 learned policy tracks the oracle closely: mean-gated PhySDV achieves
 96.9\% compliance and identical effective mAP (50.6) to the oracle while
 touching the WAN on only 14.6\% of frames.
@@ -671,105 +688,104 @@ vs.\ 67.7\,ms) stay within 3\% of the oracle.
 \textbf{Risk-aware gating.}  Mean-gating leaves a compliance gap to the
 oracle concentrated in the two urban archetypes (94.6\% and 94.0\%),
 exactly where prediction error meets a tight feasibility boundary.
-Switching the gate to the calibrated p90 estimate closes most of it
-(Fig.~\ref{fig:gating}): dense-urban compliance rises from 94.6\% to
-97.0\% and sparse-urban from 94.0\% to 96.6\%, lifting the five-scenario
-mean from 96.9\% to 97.9\%.  Notably, effective accuracy is
-\emph{unchanged} (mAP 50.7): the conservatism is priced in WAN share,
-which rises 3.3 points to 17.9\% as borderline MEC frames divert to the
-cloud---making the quantile level $\alpha$ an explicit, per-deployment
-dial trading WAN budget for latency assurance.
+Gating on the calibrated p90 estimate closes most of it
+(Fig.~\ref{fig:gating}): dense-urban compliance rises to 97.0\%,
+sparse-urban to 96.6\%, and the five-scenario mean from 96.9\% to
+97.9\%.  Effective accuracy is \emph{unchanged} (mAP 50.7): the
+conservatism is priced in WAN share ($+3.3$ points to 17.9\%) as
+borderline MEC frames divert to the cloud---making $\alpha$ an
+explicit, per-deployment dial trading WAN budget for latency assurance.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.92\columnwidth]{figures/compliance_gating.png}
-\caption{V3 latency-budget compliance per scenario: gating feasibility on
-the calibrated p90 RTT estimate (q90) recovers most of the gap between
-mean-gated decisions and the ground-truth oracle, concentrated in the two
-urban archetypes.}
+\includegraphics[width=0.80\columnwidth]{figures/compliance_gating.png}
+\caption{V3 latency-budget compliance per scenario: gating on the
+calibrated p90 RTT estimate (q90) recovers most of the mean-to-oracle
+gap, concentrated in the two urban archetypes.}
 \label{fig:gating}
 \end{figure}
 
 \textbf{Stability.}  Raw per-frame decisions switch 142 times per 1\,000
 frames; EMA smoothing cuts this to 47; adding the dwell filter yields
 6 switches ($-$96\% vs.\ raw) while mean latency compliance changes by
-only 1.6 points (97.9\% $\to$ 96.3\%).  For an SDV integrator each
-switch is a service reconfiguration (stream redirection, codec and
-session renegotiation), so this two-order-of-magnitude reduction is an
-enabler in itself.  Because infeasibility events bypass the filter, the
-injected outage below is still handled instantly.
+only 1.6 points (97.9\% $\to$ 96.3\%).  Since each switch is a service
+reconfiguration (stream redirection, session renegotiation), this
+two-order-of-magnitude reduction is an enabler in itself; infeasibility
+events still bypass the filter instantly.
 
 \textbf{Outage failover.}  Fig.~\ref{fig:outage} replays a dense-urban run
 with a 3\,s connectivity outage injected at frame 80 (MEC unreachable,
 cloud RTT inflated to 200\,ms).  Both raw and stabilized policies fall
 back to the on-board GPU \emph{on the frame of outage onset} (zero-frame
 delay)---accepting the temporary accuracy-budget violation, which is
-exactly the intended emergency semantics.  The raw trace restores MEC
-service on the first post-outage frame; the stabilized trace holds the
-fallback for $k{-}1=4$ extra frames (0.4\,s), a conservative re-entry
-that avoids flapping if connectivity is still unstable.
+exactly the intended emergency semantics.  The stabilized trace holds
+the fallback for $k{-}1=4$ extra frames (0.4\,s) after the outage
+clears, a conservative re-entry that avoids flapping.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.92\columnwidth]{figures/outage_timeline.png}
-\caption{Outage failover, dense urban, q90-gated policy.  A simulated
-outage (frames 80--109, shaded) makes MEC unreachable and inflates cloud
-RTT beyond the budget.  Fallback to the on-board tier is immediate in both
-traces because infeasibility bypasses the dwell filter; the stabilized
-trace additionally suppresses the C/D chatter and holds the fallback for
-$k{-}1 = 4$ extra frames (0.4\,s) after the outage clears.}
+\includegraphics[width=0.80\columnwidth]{figures/outage_timeline.png}
+\caption{Outage failover (dense urban, q90-gated).  During the injected
+outage (frames 80--109, shaded) fallback is immediate in both traces
+because infeasibility bypasses the dwell filter; the stabilized trace
+also suppresses the C/D chatter.}
 \label{fig:outage}
 \end{figure}
 
-\textbf{Runtime.}  The full control loop---feature assembly, availability
-classification, mean and quantile RTT prediction, table update, gating,
-and stabilization---runs in 10.8\,ms median per frame with the
-recommended predictor (6.2\,ms without the quantile heads; 27.9\,ms with
-the random-forest default), comfortably inside a 10\,Hz budget on CPU
-only.  Dataset generation and full training complete in under a minute
-combined, with no GPU, testbed, or network connection required.
+\textbf{Runtime.}  The full control loop---feature assembly,
+classification, mean and quantile RTT prediction, gating, and
+stabilization---runs in 10.8\,ms median per frame with the recommended
+predictor, comfortably inside a 10\,Hz budget on CPU only.  Dataset
+generation and full training complete in under a minute combined, with
+no GPU, testbed, or network connection required.
 
 \subsection{Discussion and limitations}
 
-\textbf{Synthetic-to-real gap.}  PhySDV's labels are internally
-consistent by construction, and V1 shows they faithfully encode the
-configured physics---but the configuration itself abstracts reality: a
-single serving cell, no packet-level protocol effects, no multi-vehicle
-decision coupling, and utilization targets that the current generator
-exposes as observable telemetry.  The intended workflow is
-\emph{calibration}: every constant in \eqref{eq:pl}--\eqref{eq:tcloud} is
-a named configuration parameter re-fittable from drive tests, and the
+PhySDV's labels are internally consistent by construction, and V1 shows
+they faithfully encode the configured physics---but the configuration
+itself abstracts reality: a single serving cell, no packet-level
+protocol effects, reachability reduced to a deterministic link budget
+(real RRC and admission-control behavior is noisier), no multi-vehicle
+decision coupling, and utilization exposed as in-band telemetry.  The
+intended workflow is \emph{calibration}: every constant in
+\eqref{eq:pl}--\eqref{eq:tcloud} is a named parameter re-fittable from
+drive tests such as~\cite{raca2020,narayanan2020lumos}, and the
 benchmark module replaces configured tier latencies with measured ones;
 the validation protocol then re-runs unchanged.
 
-\textbf{Availability triviality.}  MEC reachability is a deterministic
-link-budget function in the generator, so near-perfect classification is
-expected; real-world reachability (RRC state, admission control) is
-noisier.  The two-stage architecture is agnostic to this---only the
-classifier's operating point would change.
+These limitations position PhySDV within the landscape of
+Sec.~\ref{sec:related}: it replaces neither packet-level
+co-simulation~\cite{sommer2011veins,lopez2018sumo} where protocol
+microdynamics matter, nor measured traces~\cite{raca2020} where absolute
+realism matters; it occupies the gap between them---far lighter than
+co-simulation, yet label-complete and re-parameterizable where fixed
+traces are not---the regime in which learned
+policies~\cite{chen2019offloading,kang2017neurosurgeon} iterate quickly.
 
-\textbf{Scope of the policy.}  The decision layer is deliberately a
-transparent, auditable baseline (feasibility gate + lexicographic
-preference); its value here is that the framework makes \emph{any} policy
-comparable under V3.  Plugging DRL policies~\cite{chen2019offloading} into
-the same loop is direct future work, as are multi-vehicle contention and
-trace-driven calibration against public 5G drive tests.
+Nor is the substrate SDV-specific: any latency-sensitive mobile service
+facing a device/edge/cloud placement choice (teleoperation, drone
+inspection, mobile XR) maps onto the same state--label schema by
+swapping tier profiles, and predictor selection, uncertainty
+calibration, or stability tuning can be studied on the released dataset
+as-is---regenerable in under a minute from a seeded script.  The
+decision layer is deliberately a transparent, auditable baseline; the
+framework makes \emph{any} policy comparable under V3, and plugging DRL
+policies~\cite{chen2019offloading} into the loop is direct future work,
+with multi-vehicle contention and trace-driven calibration.
 
 % ── IX. Conclusion ───────────────────────────────────────────────────────────
 \section{Conclusion}\label{sec:conclusion}
 
-PhySDV contributes an open, physics-grounded substrate for studying
-QoS-constrained perception offloading in software-defined vehicles: a
-labeled 50\,k-sample dataset whose generating physics are recoverable from
-the data itself, a deployable two-stage predictor in automotive footprint
-(1.3\,MB, 3.8\,ms), a risk-aware quantile gate that converts prediction
-uncertainty into QoS safety margin, and a stabilized, explainable decision
-layer---validated by a three-level protocol culminating in closed-loop
-oracle agreement of up to 98.8\%.  Every number in this paper regenerates
-from a seeded script on a laptop.  We offer PhySDV as a common, extensible
-baseline on which offloading policies, predictors, and calibrated
-deployment profiles can be compared under identical, falsifiable
-conditions.
+PhySDV contributes an open, physics-grounded substrate for
+QoS-constrained perception offloading in SDVs: a labeled 50\,k-sample
+dataset whose generating physics are recoverable from the data itself,
+a deployable two-stage predictor (1.3\,MB, 3.8\,ms), a risk-aware
+quantile gate converting prediction uncertainty into QoS safety margin,
+and a stabilized, explainable decision layer---validated by a
+three-level protocol culminating in closed-loop oracle agreement of up
+to 98.8\%.  We offer PhySDV as a common, extensible baseline on which
+policies, predictors, and calibrated deployment profiles can be
+compared under identical, falsifiable conditions.
 
 % ── Acknowledgment ───────────────────────────────────────────────────────────
 \section*{Acknowledgment}
@@ -781,7 +797,7 @@ Germany, Greece, Finland, Italy, Netherlands, Poland, Portugal, Spain, and
 Turkey.
 
 % ── References ───────────────────────────────────────────────────────────────
-\begin{thebibliography}{21}
+\begin{thebibliography}{23}
 
 \bibitem{liu2022sdv}
 Z.~Liu, W.~Zhang, and F.~Zhao,
@@ -868,6 +884,17 @@ Y.~Kang \textit{et~al.},
 ``Neurosurgeon: Collaborative intelligence between the cloud and mobile
 edge,''
 in \textit{Proc. ACM ASPLOS}, 2017, pp.~615--629.
+
+\bibitem{raca2020}
+D.~Raca, D.~Leahy, C.~J. Sreenan, and J.~J. Quinlan,
+``Beyond throughput, the next generation: A 5G dataset with channel and
+context metrics,''
+in \textit{Proc. ACM Multimedia Systems Conf. (MMSys)}, 2020.
+
+\bibitem{narayanan2020lumos}
+A.~Narayanan \textit{et~al.},
+``Lumos5G: Mapping and predicting commercial mmWave 5G throughput,''
+in \textit{Proc. ACM Internet Measurement Conf. (IMC)}, 2020.
 
 \bibitem{lin2014coco}
 T.-Y. Lin \textit{et~al.},
